@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
+#include <unistd.h> // pour sleep()
 #include <ctype.h>
 
 #define MAX_JOUEURS 10
@@ -130,11 +130,16 @@ break;
 
 void tourIA(Player *joueur, Game *jeu) {
 joueur->points_tour = 0;
-printf(GRAS "\n%s%s joue...%s\n", BLEU, joueur->nom, RESET);
+
+printf(GRAS CYAN "\n===========================\n" RESET);
+printf(GRAS " Tour de l’IA : " BLEU "%s\n" RESET, joueur->nom);
+printf(GRAS CYAN "===========================\n" RESET);
+sleep(1);
 
 while (1) {
 int lancer = lancerDe();
 printf(" %s a lancé : " VERT "%d\n" RESET, joueur->nom, lancer);
+sleep(1);
 
 if (lancer == 1) {
 printf(ROUGE " Pas de chance pour %s !\n" RESET, joueur->nom);
@@ -153,6 +158,7 @@ meilleur_autre = jeu->joueurs[i].banque;
 }
 
 printf(" Points ce tour : " JAUNE "%d" RESET ", Total provisoire : " JAUNE "%d\n" RESET, joueur->points_tour, total);
+sleep(1);
 
 if (joueur->banque >= 85 && joueur->points_tour >= 3) {
 printf(VERT " %s sécurise la victoire !\n" RESET, joueur->nom);
@@ -168,6 +174,8 @@ joueur->banque += joueur->points_tour;
 break;
 }
 }
+
+sleep(1);
 }
 
 int comparerScores(const void *a, const void *b) {
@@ -217,11 +225,11 @@ afficherScores(&jeu);
 
 while (1) {
 Player *joueur = &jeu.joueurs[jeu.joueur_courant];
-printf(GRAS "\n>>> Tour de " BLEU "%s" RESET "\n", joueur->nom);
+
+printf(GRAS "\n>>> " CYAN "Nouveau tour de " BLEU "%s" RESET "\n", joueur->nom);
 
 if (joueur->est_IA) {
 tourIA(joueur, &jeu);
-sleep(1);
 } else {
 tourHumain(joueur);
 }
@@ -233,7 +241,9 @@ afficherFinDePartie(&jeu, jeu.joueur_courant);
 break;
 }
 
+joueur = NULL;
 jeu.joueur_courant = (jeu.joueur_courant + 1) % jeu.nb_joueurs;
+printf("\n");
 }
 
 printf(JAUNE "\nVoulez-vous rejouer avec les mêmes joueurs ? (o/n) : " RESET);
@@ -241,6 +251,6 @@ scanf(" %c", &rejouer);
 getchar();
 }
 
-printf(GRAS BLEU "\nMerci d'avoir joué ! À bientôt !\n" RESET);
+printf(GRAS BLEU "\nMerci d'avoir joué ! À bientôt !\n\n" RESET);
 return 0;
 }
