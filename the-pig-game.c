@@ -116,7 +116,8 @@ break;
 }
 }
 
-void tourIA(Player *joueur) {
+
+void tourIA(Player *joueur, Game *jeu) {
 joueur->points_tour = 0;
 printf("%s joue...\n", joueur->nom);
 
@@ -128,15 +129,34 @@ if (lancer == 1) {
 printf(" Pas de chance pour %s !\n", joueur->nom);
 joueur->points_tour = 0;
 break;
-} else {
-joueur->points_tour += lancer;
-printf(" %s a %d points ce tour, et %d en banque.\n", joueur->nom, joueur->points_tour, joueur->banque);
-
-if (joueur->points_tour >= 15) {
-joueur->banque += joueur->points_tour;
-printf(" %s décide de banker. Total en banque : %d\n", joueur->nom, joueur->banque);
-break;
 }
+
+joueur->points_tour += lancer;
+int total = joueur->banque + joueur->points_tour;
+
+
+int meilleur_autre = 0;
+for (int i = 0; i < jeu->nb_joueurs; i++) {
+if (&jeu->joueurs[i] != joueur && jeu->joueurs[i].banque > meilleur_autre) {
+meilleur_autre = jeu->joueurs[i].banque;
+}
+}
+
+printf(" %s a %d points ce tour, total provisoire : %d\n", joueur->nom, joueur->points_tour, total);
+
+
+if (joueur->banque >= 85 && joueur->points_tour >= 3) {
+printf(" %s veut sécuriser la victoire !\n", joueur->nom);
+joueur->banque += joueur->points_tour;
+break;
+} else if (joueur->banque > meilleur_autre + 30 && joueur->points_tour >= 10) {
+printf(" %s est en avance, il ne prend pas de risques.\n", joueur->nom);
+joueur->banque += joueur->points_tour;
+break;
+} else if (joueur->points_tour >= 15) {
+joueur->banque += joueur->points_tour;
+printf(" %s banque normalement.\n", joueur->nom);
+break;
 }
 }
 }
@@ -168,7 +188,7 @@ Player *joueur = &jeu.joueurs[jeu.joueur_courant];
 printf("\n==> C’est le tour de %s\n", joueur->nom);
 
 if (joueur->est_IA) {
-tourIA(joueur);
+tourIA(joueur, &jeu);
 sleep(1);
 } else {
 tourHumain(joueur);
