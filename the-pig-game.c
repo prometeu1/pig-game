@@ -3,10 +3,10 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #define MAX_JOUEURS 10
 #define SCORE_MAX 100
-
 
 typedef struct {
 char nom[50];
@@ -15,18 +15,15 @@ int points_tour;
 int est_IA;
 } Player;
 
-
 typedef struct {
 Player joueurs[MAX_JOUEURS];
 int nb_joueurs;
 int joueur_courant;
 } Game;
 
-
 int lancerDe() {
 return rand() % 6 + 1;
 }
-
 
 void initJoueur(Player *joueur, const char *nom, int est_IA) {
 strncpy(joueur->nom, nom, sizeof(joueur->nom) - 1);
@@ -36,32 +33,45 @@ joueur->points_tour = 0;
 joueur->est_IA = est_IA;
 }
 
+int commenceParIA(const char *nom) {
+return (tolower(nom[0]) == 'i' && tolower(nom[1]) == 'a');
+}
 
-void initJeu(Game *jeu) {
-printf("Bienvenue au jeu de cochons !\n");
 
+void initJeu(Game *jeu, int argc, char *argv[]) {
+if (argc > 1) {
+jeu->nb_joueurs = argc - 1;
+
+if (jeu->nb_joueurs > MAX_JOUEURS) {
+printf("Trop de joueurs ! Maximum autorisé : %d\n", MAX_JOUEURS);
+exit(1);
+}
+
+for (int i = 0; i < jeu->nb_joueurs; i++) {
+const char *nom = argv[i + 1];
+int est_IA = commenceParIA(nom);
+initJoueur(&jeu->joueurs[i], nom, est_IA);
+}
+} else {
 do {
 printf("Combien de joueurs (2 à %d) ? ", MAX_JOUEURS);
 scanf("%d", &jeu->nb_joueurs);
-getchar(); 
+getchar();
 } while (jeu->nb_joueurs < 2 || jeu->nb_joueurs > MAX_JOUEURS);
 
 int nb_humains;
 do {
 printf("Combien de joueurs humains ? ");
 scanf("%d", &nb_humains);
-getchar(); 
+getchar();
 } while (nb_humains < 0 || nb_humains > jeu->nb_joueurs);
-
-jeu->joueur_courant = 0;
 
 for (int i = 0; i < jeu->nb_joueurs; i++) {
 char nom[50];
-
 if (i < nb_humains) {
 printf("Nom du joueur humain %d : ", i + 1);
 fgets(nom, sizeof(nom), stdin);
-nom[strcspn(nom, "\n")] = '\0'; 
+nom[strcspn(nom, "\n")] = '\0';
 initJoueur(&jeu->joueurs[i], nom, 0);
 } else {
 snprintf(nom, sizeof(nom), "IA %d", i - nb_humains + 1);
@@ -70,6 +80,8 @@ initJoueur(&jeu->joueurs[i], nom, 1);
 }
 }
 
+jeu->joueur_courant = 0;
+}
 
 void afficherScores(Game *jeu) {
 printf("\n--- Scores actuels ---\n");
@@ -78,7 +90,6 @@ printf("%s : %d points\n", jeu->joueurs[i].nom, jeu->joueurs[i].banque);
 }
 printf("----------------------\n");
 }
-
 
 void tourHumain(Player *joueur) {
 joueur->points_tour = 0;
@@ -108,7 +119,6 @@ break;
 }
 }
 
-
 void tourIA(Player *joueur) {
 joueur->points_tour = 0;
 printf("%s joue...\n", joueur->nom);
@@ -134,10 +144,13 @@ break;
 }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
 srand(time(NULL));
 Game jeu;
-initJeu(&jeu);
+initJeu(&jeu, argc, argv);
+
+printf("\n--- Début de la partie ---\n");
+afficherScores(&jeu);
 
 while (1) {
 Player *joueur = &jeu.joueurs[jeu.joueur_courant];
