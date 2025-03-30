@@ -7,6 +7,16 @@
 
 #define MAX_JOUEURS 10
 #define SCORE_MAX 100
+#define FICHIER_SCORES "scores.txt"
+
+// Couleurs ANSI
+#define RESET "\033[0m"
+#define ROUGE "\033[31m"
+#define VERT "\033[32m"
+#define JAUNE "\033[33m"
+#define BLEU "\033[34m"
+#define CYAN "\033[36m"
+#define GRAS "\033[1m"
 
 typedef struct {
 char nom[50];
@@ -38,10 +48,12 @@ return (tolower(nom[0]) == 'i' && tolower(nom[1]) == 'a');
 }
 
 void initJeu(Game *jeu, int argc, char *argv[]) {
+printf(GRAS BLEU "\n=== Bienvenue dans le jeu de cochons ! ===\n" RESET);
+
 if (argc > 1) {
 jeu->nb_joueurs = argc - 1;
 if (jeu->nb_joueurs > MAX_JOUEURS) {
-printf("Trop de joueurs ! Maximum autorisé : %d\n", MAX_JOUEURS);
+printf(ROUGE "Trop de joueurs ! Maximum : %d\n" RESET, MAX_JOUEURS);
 exit(1);
 }
 for (int i = 0; i < jeu->nb_joueurs; i++) {
@@ -51,14 +63,14 @@ initJoueur(&jeu->joueurs[i], nom, est_IA);
 }
 } else {
 do {
-printf("Combien de joueurs (2 à %d) ? ", MAX_JOUEURS);
+printf(JAUNE "Combien de joueurs (2 à %d) ? " RESET, MAX_JOUEURS);
 scanf("%d", &jeu->nb_joueurs);
 getchar();
 } while (jeu->nb_joueurs < 2 || jeu->nb_joueurs > MAX_JOUEURS);
 
 int nb_humains;
 do {
-printf("Combien de joueurs humains ? ");
+printf(JAUNE "Combien de joueurs humains ? " RESET);
 scanf("%d", &nb_humains);
 getchar();
 } while (nb_humains < 0 || nb_humains > jeu->nb_joueurs);
@@ -66,7 +78,7 @@ getchar();
 for (int i = 0; i < jeu->nb_joueurs; i++) {
 char nom[50];
 if (i < nb_humains) {
-printf("Nom du joueur humain %d : ", i + 1);
+printf(JAUNE "Nom du joueur humain %d : " RESET, i + 1);
 fgets(nom, sizeof(nom), stdin);
 nom[strcspn(nom, "\n")] = '\0';
 initJoueur(&jeu->joueurs[i], nom, 0);
@@ -81,11 +93,11 @@ jeu->joueur_courant = 0;
 }
 
 void afficherScores(Game *jeu) {
-printf("\n--- Scores actuels ---\n");
+printf(GRAS CYAN "\n--- Scores actuels ---\n" RESET);
 for (int i = 0; i < jeu->nb_joueurs; i++) {
-printf("%s : %d points\n", jeu->joueurs[i].nom, jeu->joueurs[i].banque);
+printf("%s%-10s%s : %s%3d points%s\n", BLEU, jeu->joueurs[i].nom, RESET, JAUNE, jeu->joueurs[i].banque, RESET);
 }
-printf("----------------------\n");
+printf(CYAN "------------------------\n" RESET);
 }
 
 void tourHumain(Player *joueur) {
@@ -94,46 +106,44 @@ char choix;
 
 while (1) {
 int lancer = lancerDe();
-printf("Vous avez lancé : %d\n", lancer);
+printf(GRAS "\nVous avez lancé : " VERT "%d" RESET "\n", lancer);
 
 if (lancer == 1) {
-printf("Pas de chance ! Vous perdez les points de ce tour.\n");
+printf(ROUGE "Pas de chance ! Vous perdez les points de ce tour.\n" RESET);
 joueur->points_tour = 0;
 break;
 } else {
 joueur->points_tour += lancer;
-printf("Vous avez %d points ce tour, et %d en banque.\n", joueur->points_tour, joueur->banque);
-printf("Continuer à lancer ? [r]oll ou [b]ank: ");
+printf(CYAN "Points ce tour : " JAUNE "%d" CYAN ", Banque : " JAUNE "%d\n" RESET, joueur->points_tour, joueur->banque);
+printf(JAUNE "Continuer ? [r]oll / [b]ank : " RESET);
 scanf(" %c", &choix);
 getchar();
 
 if (choix == 'b') {
 joueur->banque += joueur->points_tour;
-printf("Vous avez maintenant %d points en banque.\n", joueur->banque);
+printf(VERT "Points ajoutés à votre banque : %d\n" RESET, joueur->points_tour);
 break;
 }
 }
 }
 }
 
-
 void tourIA(Player *joueur, Game *jeu) {
 joueur->points_tour = 0;
-printf("%s joue...\n", joueur->nom);
+printf(GRAS "\n%s%s joue...%s\n", BLEU, joueur->nom, RESET);
 
 while (1) {
 int lancer = lancerDe();
-printf(" %s a lancé : %d\n", joueur->nom, lancer);
+printf(" %s a lancé : " VERT "%d\n" RESET, joueur->nom, lancer);
 
 if (lancer == 1) {
-printf(" Pas de chance pour %s !\n", joueur->nom);
+printf(ROUGE " Pas de chance pour %s !\n" RESET, joueur->nom);
 joueur->points_tour = 0;
 break;
 }
 
 joueur->points_tour += lancer;
 int total = joueur->banque + joueur->points_tour;
-
 
 int meilleur_autre = 0;
 for (int i = 0; i < jeu->nb_joueurs; i++) {
@@ -142,50 +152,72 @@ meilleur_autre = jeu->joueurs[i].banque;
 }
 }
 
-printf(" %s a %d points ce tour, total provisoire : %d\n", joueur->nom, joueur->points_tour, total);
-
+printf(" Points ce tour : " JAUNE "%d" RESET ", Total provisoire : " JAUNE "%d\n" RESET, joueur->points_tour, total);
 
 if (joueur->banque >= 85 && joueur->points_tour >= 3) {
-printf(" %s veut sécuriser la victoire !\n", joueur->nom);
+printf(VERT " %s sécurise la victoire !\n" RESET, joueur->nom);
 joueur->banque += joueur->points_tour;
 break;
 } else if (joueur->banque > meilleur_autre + 30 && joueur->points_tour >= 10) {
-printf(" %s est en avance, il ne prend pas de risques.\n", joueur->nom);
+printf(VERT " %s ne prend pas de risque.\n" RESET, joueur->nom);
 joueur->banque += joueur->points_tour;
 break;
 } else if (joueur->points_tour >= 15) {
+printf(VERT " %s banque normalement.\n" RESET, joueur->nom);
 joueur->banque += joueur->points_tour;
-printf(" %s banque normalement.\n", joueur->nom);
 break;
 }
+}
+}
+
+int comparerScores(const void *a, const void *b) {
+const Player *pa = *(const Player **)a;
+const Player *pb = *(const Player **)b;
+return pb->banque - pa->banque;
+}
+
+void sauvegarderScore(Player *gagnant) {
+FILE *f = fopen(FICHIER_SCORES, "a");
+if (f) {
+fprintf(f, "%s a gagné avec %d points\n", gagnant->nom, gagnant->banque);
+fclose(f);
 }
 }
 
 void afficherFinDePartie(Game *jeu, int gagnant_index) {
-printf("\n===============================\n");
-printf(" Le gagnant est : %s\n", jeu->joueurs[gagnant_index].nom);
-printf(" Score final : %d points\n", jeu->joueurs[gagnant_index].banque);
-printf("===============================\n");
+printf(GRAS VERT "\n=== FIN DE PARTIE ===\n" RESET);
+printf(GRAS "Gagnant : " BLEU "%s" RESET " avec " JAUNE "%d points\n" RESET,
+jeu->joueurs[gagnant_index].nom,
+jeu->joueurs[gagnant_index].banque);
 
-printf("Classement final :\n");
+Player *classement[MAX_JOUEURS];
 for (int i = 0; i < jeu->nb_joueurs; i++) {
-printf(" - %s : %d points\n", jeu->joueurs[i].nom, jeu->joueurs[i].banque);
+classement[i] = &jeu->joueurs[i];
 }
-printf("===============================\n");
+
+qsort(classement, jeu->nb_joueurs, sizeof(Player *), comparerScores);
+
+printf(GRAS CYAN "\n--- Classement final ---\n" RESET);
+for (int i = 0; i < jeu->nb_joueurs; i++) {
+printf("%d. %s%-10s%s : " JAUNE "%d pts\n" RESET, i + 1, BLEU, classement[i]->nom, RESET, classement[i]->banque);
+}
+
+sauvegarderScore(&jeu->joueurs[gagnant_index]);
 }
 
 int main(int argc, char *argv[]) {
 srand(time(NULL));
+char rejouer = 'o';
+
+while (rejouer == 'o' || rejouer == 'O') {
 Game jeu;
 initJeu(&jeu, argc, argv);
-
-printf("\n--- Début de la partie ---\n");
+printf(GRAS CYAN "\n--- Début de la partie ---\n" RESET);
 afficherScores(&jeu);
 
 while (1) {
 Player *joueur = &jeu.joueurs[jeu.joueur_courant];
-
-printf("\n==> C’est le tour de %s\n", joueur->nom);
+printf(GRAS "\n>>> Tour de " BLEU "%s" RESET "\n", joueur->nom);
 
 if (joueur->est_IA) {
 tourIA(joueur, &jeu);
@@ -204,5 +236,11 @@ break;
 jeu.joueur_courant = (jeu.joueur_courant + 1) % jeu.nb_joueurs;
 }
 
+printf(JAUNE "\nVoulez-vous rejouer avec les mêmes joueurs ? (o/n) : " RESET);
+scanf(" %c", &rejouer);
+getchar();
+}
+
+printf(GRAS BLEU "\nMerci d'avoir joué ! À bientôt !\n" RESET);
 return 0;
 }
