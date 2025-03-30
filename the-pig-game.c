@@ -37,16 +37,13 @@ int commenceParIA(const char *nom) {
 return (tolower(nom[0]) == 'i' && tolower(nom[1]) == 'a');
 }
 
-
 void initJeu(Game *jeu, int argc, char *argv[]) {
 if (argc > 1) {
 jeu->nb_joueurs = argc - 1;
-
 if (jeu->nb_joueurs > MAX_JOUEURS) {
 printf("Trop de joueurs ! Maximum autorisé : %d\n", MAX_JOUEURS);
 exit(1);
 }
-
 for (int i = 0; i < jeu->nb_joueurs; i++) {
 const char *nom = argv[i + 1];
 int est_IA = commenceParIA(nom);
@@ -144,6 +141,19 @@ break;
 }
 }
 
+void afficherFinDePartie(Game *jeu, int gagnant_index) {
+printf("\n===============================\n");
+printf(" Le gagnant est : %s\n", jeu->joueurs[gagnant_index].nom);
+printf(" Score final : %d points\n", jeu->joueurs[gagnant_index].banque);
+printf("===============================\n");
+
+printf("Classement final :\n");
+for (int i = 0; i < jeu->nb_joueurs; i++) {
+printf(" - %s : %d points\n", jeu->joueurs[i].nom, jeu->joueurs[i].banque);
+}
+printf("===============================\n");
+}
+
 int main(int argc, char *argv[]) {
 srand(time(NULL));
 Game jeu;
@@ -167,7 +177,7 @@ tourHumain(joueur);
 afficherScores(&jeu);
 
 if (joueur->banque >= SCORE_MAX) {
-printf("\n%s a gagné avec %d points ! Félicitations !\n", joueur->nom, joueur->banque);
+afficherFinDePartie(&jeu, jeu.joueur_courant);
 break;
 }
 
