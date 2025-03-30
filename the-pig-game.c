@@ -4,70 +4,131 @@
 #include <string.h>
 
 #define MAX_JOUEURS 10
+#define SCORE_MAX 100
 
 
 typedef struct {
-    char nom[50];         
-    int banque;           
-    int points_tour;      
-    int est_IA;           
+char nom[50];
+int banque;
+int points_tour;
+int est_IA;
 } Player;
 
 
 typedef struct {
-    Player joueurs[MAX_JOUEURS];  
-    int nb_joueurs;            
-    int joueur_courant;          
-    int score_max;               
+Player joueurs[MAX_JOUEURS];
+int nb_joueurs;
+int joueur_courant;
 } Game;
 
 
-void initJoueur(Player *joueur, const char *nom, int est_IA) {
-    strncpy(joueur->nom, nom, sizeof(joueur->nom) - 1);
-    joueur->nom[sizeof(joueur->nom) - 1] = '\0';  
-    joueur->banque = 0;
-    joueur->points_tour = 0;
-    joueur->est_IA = est_IA;
+int lancerDe() {
+return rand() % 6 + 1;
 }
 
 
-void initJeu(Game *jeu, int nb_joueurs, int score_max) {
-    jeu->nb_joueurs = nb_joueurs;
-    jeu->score_max = score_max;
-    jeu->joueur_courant = 0; 
+void initJoueur(Player *joueur, const char *nom, int est_IA) {
+strncpy(joueur->nom, nom, sizeof(joueur->nom) - 1);
+joueur->nom[sizeof(joueur->nom) - 1] = '\0';
+joueur->banque = 0;
+joueur->points_tour = 0;
+joueur->est_IA = est_IA;
+}
 
-   
-    for (int i = 0; i < nb_joueurs; i++) {
-        char nom[50];
-        int est_IA;
 
-        if (i % 2 == 0) {  
-            printf("Entrez le nom du joueur %d: ", i + 1);
-            fgets(nom, sizeof(nom), stdin);
-            nom[strcspn(nom, "\n")] = '\0';  
-            est_IA = 0;  
-        } else {
-            snprintf(nom, sizeof(nom), "IA %d", i + 1);
-            est_IA = 1;  
-        }
+void initJeu(Game *jeu) {
+jeu->nb_joueurs = 2;
+jeu->joueur_courant = 0;
 
-        initJoueur(&jeu->joueurs[i], nom, est_IA);
-    }
+char nom[50];
+printf("Bienvenue au jeu de cochons!\n");
+printf("Entrez le nom du joueur 1: ");
+fgets(nom, sizeof(nom), stdin);
+nom[strcspn(nom, "\n")] = '\0'; 
+initJoueur(&jeu->joueurs[0], nom, 0); 
+
+initJoueur(&jeu->joueurs[1], "IA 2", 1); 
+}
+
+
+void tourHumain(Player *joueur) {
+joueur->points_tour = 0;
+char choix;
+
+while (1) {
+int lancer = lancerDe();
+printf("Vous avez lancé : %d\n", lancer);
+
+if (lancer == 1) {
+printf("Pas de chance ! Vous perdez les points de ce tour.\n");
+joueur->points_tour = 0;
+break;
+} else {
+joueur->points_tour += lancer;
+printf("Vous avez %d points ce tour, et %d en banque.\n", joueur->points_tour, joueur->banque);
+printf("Continuer à lancer ? [r]oll ou [b]ank: ");
+scanf(" %c", &choix);
+getchar(); 
+
+if (choix == 'b') {
+joueur->banque += joueur->points_tour;
+printf("Vous avez %d points en banque.\n", joueur->banque);
+break;
+}
+}
+}
+}
+
+
+void tourIA(Player *joueur) {
+joueur->points_tour = 0;
+printf("%s joue...\n", joueur->nom);
+
+while (1) {
+int lancer = lancerDe();
+printf(" %s a lancé : %d\n", joueur->nom, lancer);
+
+if (lancer == 1) {
+printf(" Pas de chance pour %s !\n", joueur->nom);
+joueur->points_tour = 0;
+break;
+} else {
+joueur->points_tour += lancer;
+printf(" %s a %d points ce tour, et %d en banque.\n", joueur->nom, joueur->points_tour, joueur->banque);
+if (joueur->points_tour >= 15) {
+joueur->banque += joueur->points_tour;
+printf(" %s décide de banker. Nouveau total : %d points.\n", joueur->nom, joueur->banque);
+break;
+}
+}
+}
 }
 
 int main() {
-    Game jeu;
+srand(time(NULL));
+Game jeu;
+initJeu(&jeu);
 
-    printf("Bienvenue au jeu de cochons!\n");
-    int nb_joueurs = 2;  
-    int score_max = 100;  
+while (1) {
+Player *joueur = &jeu.joueurs[jeu.joueur_courant];
 
-    initJeu(&jeu, nb_joueurs, score_max);
+printf("\n==> C’est le tour de %s\n", joueur->nom);
 
-    printf("Le jeu commence!\n");
-    for (int i = 0; i < jeu.nb_joueurs; i++) {
-        printf("Joueur %d: %s\n", i + 1, jeu.joueurs[i].nom);
-    }
+if (joueur->est_IA) {
+tourIA(joueur);
+} else {
+tourHumain(joueur);
+}
 
-    return 0;
+
+if (joueur->banque >= SCORE_MAX) {
+printf("\n%s a gagné avec %d points ! Bravo !\n", joueur->nom, joueur->banque);
+break;
+}
+
+
+jeu.joueur_courant = (jeu.joueur_courant + 1) % jeu.nb_joueurs;
+}
+
+return 0;
 }
