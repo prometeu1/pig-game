@@ -7,7 +7,7 @@
 #define MAX_JOUEURS 10
 #define SCORE_MAX 100
 
-// Structure pour un joueur
+
 typedef struct {
 char nom[50];
 int banque;
@@ -15,19 +15,19 @@ int points_tour;
 int est_IA;
 } Player;
 
-// Structure pour le jeu
+
 typedef struct {
 Player joueurs[MAX_JOUEURS];
 int nb_joueurs;
 int joueur_courant;
 } Game;
 
-// Lancer de dé
+
 int lancerDe() {
 return rand() % 6 + 1;
 }
 
-// Initialisation d’un joueur
+
 void initJoueur(Player *joueur, const char *nom, int est_IA) {
 strncpy(joueur->nom, nom, sizeof(joueur->nom) - 1);
 joueur->nom[sizeof(joueur->nom) - 1] = '\0';
@@ -36,21 +36,21 @@ joueur->points_tour = 0;
 joueur->est_IA = est_IA;
 }
 
-// Initialisation du jeu avec N joueurs
+
 void initJeu(Game *jeu) {
 printf("Bienvenue au jeu de cochons !\n");
 
 do {
 printf("Combien de joueurs (2 à %d) ? ", MAX_JOUEURS);
 scanf("%d", &jeu->nb_joueurs);
-getchar(); // consomme le \n
+getchar(); 
 } while (jeu->nb_joueurs < 2 || jeu->nb_joueurs > MAX_JOUEURS);
 
 int nb_humains;
 do {
 printf("Combien de joueurs humains ? ");
 scanf("%d", &nb_humains);
-getchar(); // consomme le \n
+getchar(); 
 } while (nb_humains < 0 || nb_humains > jeu->nb_joueurs);
 
 jeu->joueur_courant = 0;
@@ -61,7 +61,7 @@ char nom[50];
 if (i < nb_humains) {
 printf("Nom du joueur humain %d : ", i + 1);
 fgets(nom, sizeof(nom), stdin);
-nom[strcspn(nom, "\n")] = '\0'; // Enlève le \n
+nom[strcspn(nom, "\n")] = '\0'; 
 initJoueur(&jeu->joueurs[i], nom, 0);
 } else {
 snprintf(nom, sizeof(nom), "IA %d", i - nb_humains + 1);
@@ -70,7 +70,7 @@ initJoueur(&jeu->joueurs[i], nom, 1);
 }
 }
 
-// Affiche les scores
+
 void afficherScores(Game *jeu) {
 printf("\n--- Scores actuels ---\n");
 for (int i = 0; i < jeu->nb_joueurs; i++) {
@@ -79,7 +79,7 @@ printf("%s : %d points\n", jeu->joueurs[i].nom, jeu->joueurs[i].banque);
 printf("----------------------\n");
 }
 
-// Tour du joueur humain
+
 void tourHumain(Player *joueur) {
 joueur->points_tour = 0;
 char choix;
@@ -108,7 +108,7 @@ break;
 }
 }
 
-// Tour IA avec stratégie
+
 void tourIA(Player *joueur) {
 joueur->points_tour = 0;
 printf("%s joue...\n", joueur->nom);
