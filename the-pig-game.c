@@ -70,7 +70,9 @@ int readNumber(int min, int max, const char *message) {
     do {
         printf("%s", message);  // Affiche le message de demande
         if (fgets(buffer, sizeof(buffer), stdin) == NULL) {  // Lit l'entrée
-            printf(RED "Erreur de lecture.\n" RESET);  // Gère l'erreur de lecture
+            // Si EOF (Ctrl+D), réinitialise stdin pour éviter boucle infinie
+            clearerr(stdin);
+            printf(RED "Erreur de lecture (EOF détecté). Réessayez.\n" RESET);
             continue;  // Redemande
         }
         if (sscanf(buffer, "%d", &number) == 1 && number >= min && number <= max) {  // Vérifie validité
@@ -113,7 +115,9 @@ void initGame(Game *game, int argc, char *argv[]) {
                 do {
                     printf(YELLOW "Nom du joueur humain %d (max %d caractères) : " RESET, i + 1, MAX_NAME);  // Demande nom
                     if (fgets(name, sizeof(name), stdin) == NULL) {  // Lit le nom
-                        printf(RED "Erreur de lecture.\n" RESET);  // Gère erreur
+                        // Si EOF (Ctrl+D), réinitialise stdin pour éviter boucle infinie
+                        clearerr(stdin);
+                        printf(RED "Erreur de lecture (EOF détecté). Réessayez.\n" RESET);  // Gère erreur
                         continue;  // Redemande
                     }
                     name[strcspn(name, "\n")] = '\0';  // Enlève le \n de la fin
@@ -163,7 +167,8 @@ void humanTurn(Player *player) {
         do {
             printf(YELLOW "Continuer ? [r]oll / [b]ank : " RESET);  // Demande choix
             if (fgets(buffer, sizeof(buffer), stdin) == NULL) {  // Lit choix
-                printf(RED "Erreur de lecture.\n" RESET);  // Gère erreur
+                clearerr(stdin);  // Réinitialise l'état EOF
+                printf(RED "Erreur de lecture (EOF détecté). Réessayez.\n" RESET);  // Gère erreur
                 continue;  // Redemande
             }
             char choice = tolower(buffer[0]);  // Prend 1er caractère (minuscule)
@@ -288,7 +293,8 @@ int main(int argc, char *argv[]) {
             char buffer[10];  // Buffer entrée
             printf(YELLOW "\nVoulez-vous rejouer avec les mêmes joueurs ? (o/n) : " RESET);  // Demande choix
             if (fgets(buffer, sizeof(buffer), stdin) == NULL) {  // Lit choix
-                printf(RED "Erreur de lecture.\n" RESET);  // Gère erreur
+                clearerr(stdin);  // Réinitialise l'état EOF
+                printf(RED "Erreur de lecture (EOF détecté). Réessayez.\n" RESET);  // Gère erreur
                 continue;  // Redemande
             }
             replay = tolower(buffer[0]);  // Prend 1er caractère (minuscule)
