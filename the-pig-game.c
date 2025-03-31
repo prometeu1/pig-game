@@ -3,15 +3,7 @@
 #include <string.h>     // Pour les opérations sur les chaînes de caractères
 #include <time.h>       // Pour initialiser le générateur de nombres aléatoires
 #include <ctype.h>      // Pour les fonctions de test et conversion de caractères
-
-#ifdef _WIN32          // Vérif si compilation sous Windows
-#include <windows.h>    // Inclut les API Windows
-#include <process.h>    // Pour les fonctions liées aux processus sous Windows
-#define sleep(seconds) Sleep(seconds * 1000)  // Adapte sleep pour Windows (ms -> s)
-#define getpid() _getpid()                    // Adapte getpid pour Windows
-#else                  // Si pas sous Windows, on utilise les headers UNIX
 #include <unistd.h>     // Pour sleep() et getpid() sous UNIX
-#endif
 
 #define MAX_PLAYERS 10  // Nb max de joueurs autorisés
 #define MAX_SCORE 100   // Score à atteindre pour gagner
@@ -267,24 +259,8 @@ void displayGameEnd(Game *game, int winner_index) {
     saveScore(&game->players[winner_index]);  // Sauvegarde le score gagnant
 }
 
-// Active le support des couleurs ANSI sous Windows
-#ifdef _WIN32
-void enableANSISupport() {
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);  // Récupère handle console
-    if (hOut == INVALID_HANDLE_VALUE) return;  // Si erreur, abandonne
-    DWORD dwMode = 0;  // Mode console
-    if (!GetConsoleMode(hOut, &dwMode)) return;  // Récupère mode actuel
-    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;  // Active support ANSI
-    SetConsoleMode(hOut, dwMode);  // Applique nouveau mode
-}
-#endif
-
 // Fonction principale
 int main(int argc, char *argv[]) {
-    #ifdef _WIN32  // Si Windows
-    enableANSISupport();  // Active les couleurs ANSI
-    #endif
-
     srand((unsigned)time(NULL) ^ (unsigned)getpid());  // Init générateur aléatoire
     char replay;  // Pour stocker choix de rejouer
     do {  // Boucle de parties
